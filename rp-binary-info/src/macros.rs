@@ -55,6 +55,65 @@ macro_rules! pointer {
     }};
 }
 
+/// Concatenate strings a list of names to get
+/// names for each pins
+#[macro_export]
+macro_rules! pins_names_concat {
+    (&[$($names: expr),+]) => {
+        pins_names_concat!($($names),+)
+    };
+
+    ($names:expr) => {
+        if let Ok(x) = core::ffi::c_str::CStr::from_bytes_until_nul(
+            (concat!($names, "\0")).as_bytes()
+        ) {
+        x
+        } else {
+        panic!("Failed to convert &str to &Cstr");
+        }
+    };
+
+    ($names:expr, $name:expr) => {
+        pins_names_concat!(concat!($names,"|",$name))
+    };
+
+    ($names:expr, $second:expr, $($more:expr),+) => {
+        pins_names_concat!(concat!($names,"|",$second), $($more),+)
+    };
+}
+
+/// Generate a static item containing a Pin description with its name
+/// [`EntryAddr`](super::EntryAddr).
+#[macro_export]
+macro_rules! pins_with_names {
+    ($pins:expr, &[$($names: expr),+]) => {{
+        static ENTRY: $crate::PinsWithName =
+            $crate::PinsWithName::new($pins, ($crate::pins_names_concat!($($names),+)));
+        ENTRY.addr()
+    }};
+}
+
+/// Generate a static item containing the Pins with function desciptor
+/// [`EntryAddr`](super::EntryAddr)
+#[macro_export]
+macro_rules! pins_with_func {
+    ($pins:expr, $func: expr) => {{
+        static ENTRY: $crate::PinsWithFunction = $crate::PinsWithFunction::new($pins, $func);
+        ENTRY.addr()
+    }};
+}
+
+/// Generate a static item containing the Pins range with function descriptor
+/// [`EntryAddr`](super::EntryAddr)
+#[macro_export]
+macro_rules! pins_range_with_func {
+    ($low:expr, $high:expr, $func:expr) => {{
+        static ENTRY: $crate::PinsWithFunction =
+            $crate::PinsWithFunction::new_range($low, $high, $func);
+        ENTRY.addr()
+    }};
+}
+
 /// Generate a static item containing the program name, and return its
 /// [`EntryAddr`](super::EntryAddr).
 #[macro_export]
@@ -205,6 +264,40 @@ macro_rules! rp_binary_end {
             unsafe { core::ptr::addr_of!($ptr).cast() }
         )
     }};
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn names_concatenation_returns_single_name_if_only_one_provided() {
+        assert_eq!(c"a", pins_names_concat!("a"));
+        assert_eq!(c"a", pins_names_concat!(&["a"]));
+    }
+
+    #[test]
+    fn names_concatenation_returns_pipe_separated_list_of_names() {
+        assert_eq!(c"a|b|c", pins_names_concat!(&["a", "b", "c"]));
+    }
+
+    #[test]
+    fn pins_with_names_can_be_created_from_strings() {
+        crate::PinsWithName::new([1, 2, 3].as_slice(), pins_names_concat!(&["a", "b", "c"]));
+    }
+
+    #[test]
+    fn pins_name_macro() {
+        pins_with_names!([1, 2, 3].as_slice(), &["A", "B", "C"]);
+    }
+
+    #[test]
+    fn pins_with_func_macro() {
+        pins_with_func!([1, 2].as_slice(), crate::consts::GpioFunction::Uart);
+    }
+
+    #[test]
+    fn pins_range_with_func_macro() {
+        pins_range_with_func!(0, 5, crate::consts::GpioFunction::Spi);
+    }
 }
 
 // End of file

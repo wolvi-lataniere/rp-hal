@@ -1,5 +1,7 @@
 //! Types for the Binary Info system
 
+use crate::consts::{GpioFunction, TAG_RASPBERRY_PI};
+
 /// This is the 'Binary Info' header block that `picotool` looks for in your UF2
 /// file/ELF file/Pico in Bootloader Mode to give you useful metadata about your
 /// program.
@@ -226,5 +228,174 @@ impl PointerEntry {
 // pointers between threads. We only allow these to be created with static
 // data, so this is OK.
 unsafe impl Sync for PointerEntry {}
+
+/// A structure for multiple pins with name info
+#[repr(C)]
+pub struct PinsWithName {
+    header: EntryCommon,
+    mask: u32,
+    label: *const core::ffi::c_char,
+}
+
+impl PinsWithName {
+    const fn fold_config(mask: u32, rest: &[u32]) -> u32 {
+        match rest {
+            [] => mask,
+            [first_pin, rest_pins @ ..] => {
+                let masked_pin = 1u32
+                    .checked_shl(*first_pin)
+                    .expect("Pin number should be between 0 and 31");
+
+                assert!(mask < masked_pin, "Pins should be in increasing order");
+
+                Self::fold_config(mask | masked_pin, rest_pins)
+            }
+        }
+    }
+
+    /// Create a new `PinWithName`
+    ///
+    /// Represents names info for multiple pins
+    pub const fn new(pins: &[u32], label: &'static core::ffi::c_str::CStr) -> Self {
+        Self {
+            header: EntryCommon {
+                data_type: DataType::PinsWithName,
+                tag: TAG_RASPBERRY_PI,
+            },
+            mask: Self::fold_config(0, pins),
+            label: label.as_ptr(),
+        }
+    }
+    /// Get this entry's address
+    pub const fn addr(&self) -> EntryAddr {
+        EntryAddr(self as *const Self as *const u32)
+    }
+}
+
+unsafe impl Sync for PinsWithName {}
+
+/// A structure for multiple pins with function definition
+#[repr(C)]
+pub struct PinsWithFunction {
+    header: EntryCommon,
+    encoding: u32,
+}
+
+const BI_PINS_ENCODING_MULTI: u32 = 2;
+const BI_PINS_ENCODING_RANGE: u32 = 1;
+
+impl PinsWithFunction {
+    const fn fold_iter(
+        initial_value: u32,
+        values: &[u32],
+        position: u32,
+        last_value: u32,
+    ) -> Option<u32> {
+        match values {
+            [] => {
+                if let Some(value) = last_value.checked_shl(5) {
+                    Some(initial_value | value)
+                } else {
+                    None
+                }
+            }
+            [first, rest @ ..] => {
+                if let Some(value) = first.checked_shl(7 + 5 * position) {
+                    Self::fold_iter(initial_value | value, rest, position + 1, value)
+                } else {
+                    None
+                }
+            }
+        }
+    }
+    /// Create a new `PinWithFunction` for multiple pins
+    pub const fn new(pins: &[u32], func: GpioFunction) -> Self {
+        let func = (func as u32)
+            .checked_shl(3)
+            .expect("Failed to shift GpioFunction");
+        let base: u32 = BI_PINS_ENCODING_MULTI | func;
+        let encoding =
+            Self::fold_iter(base, pins, 0, 0).expect("All pins should be between 0 and 31");
+        Self {
+            header: EntryCommon {
+                data_type: DataType::PinsWithFunction,
+                tag: TAG_RASPBERRY_PI,
+            },
+            encoding,
+        }
+    }
+
+    /// Create a new `PinsWithFunction` from a pins range
+    ///
+    /// Apply function `func` to pins range going from `pin_low` to `pin_high`
+    pub const fn new_range(pin_low: u32, pin_high: u32, func: GpioFunction) -> Self {
+        let func = (func as u32)
+            .checked_shl(3)
+            .expect("Failed to shift GpioFunction");
+        let base: u32 = BI_PINS_ENCODING_RANGE
+            | func
+            | pin_low.checked_shl(7).expect("Failed to shift pin_low")
+            | pin_high.checked_shl(12).expect("Failed to shift_pin_high");
+
+        Self {
+            header: EntryCommon {
+                data_type: DataType::PinsWithFunction,
+                tag: TAG_RASPBERRY_PI,
+            },
+            encoding: base,
+        }
+    }
+
+    /// Get this entry's address
+    pub const fn addr(&self) -> EntryAddr {
+        EntryAddr(self as *const Self as *const u32)
+    }
+}
+
+unsafe impl Sync for PinsWithFunction {}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn pins_with_function_generate_proper_outputs() {
+        let pwf = PinsWithFunction::new([2].as_slice(), GpioFunction::Uart);
+        assert_eq!(pwf.encoding, 2 | 2 << 3 | 2 << 7 | 2 << 12);
+
+        let pwf = PinsWithFunction::new([2, 3].as_slice(), GpioFunction::Uart);
+        assert_eq!(pwf.encoding, 2 | 2 << 3 | 2 << 7 | 3 << 12 | 3 << 17);
+
+        let pwf = PinsWithFunction::new([2, 3, 4, 5, 6].as_slice(), GpioFunction::Uart);
+        assert_eq!(
+            pwf.encoding,
+            2 | 2 << 3 | 2 << 7 | 3 << 12 | 4 << 17 | 5 << 22 | 6 << 27
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn pin_with_function_should_fail_when_more_than_5_pins() {
+        PinsWithFunction::new([2, 3, 4, 5, 6, 8].as_slice(), GpioFunction::Uart);
+    }
+
+    #[test]
+    fn pin_range_with_function_generate_proper_outputs() {
+        let pwf = PinsWithFunction::new_range(0, 4, GpioFunction::Uart);
+        assert_eq!(pwf.encoding, 1 | 2 << 3 | 4 << 12);
+    }
+
+    #[test]
+    fn pins_with_name_fold_returns_the_corresponding_mask() {
+        assert_eq!(PinsWithName::fold_config(0, &[1, 2, 3]), 0x0E);
+    }
+
+    #[test]
+    #[should_panic]
+    fn pins_with_name_fold_panics_on_unordered_list() {
+        PinsWithName::fold_config(0, &[3, 1]);
+    }
+}
 
 // End of file
