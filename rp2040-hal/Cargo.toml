@@ -3,7 +3,6 @@ authors = ["The rp-rs Developers"]
 categories = ["embedded", "hardware-support", "no-std", "no-std::no-alloc"]
 description = "A Rust Embedded-HAL impl for the rp2040 microcontroller"
 edition = "2021"
-homepage = "https://github.com/rp-rs/rp-hal"
 keywords = ["embedded", "hal", "raspberry-pi", "rp2040", "embedded-hal"]
 license = "MIT OR Apache-2.0"
 name = "rp2040-hal"
