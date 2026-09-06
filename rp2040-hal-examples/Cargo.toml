@@ -31,7 +31,7 @@ hd44780-driver = {version = "0.4.0", git = "https://github.com/JohnDoneth/hd4478
 nb = "1.0"
 panic-halt = "0.2.0"
 panic-probe = {version = "0.3.1", features = ["print-defmt"]}
-pio = "0.3.0"
+pio = "0.4.0"
 # We aren't using portable-atomic directly in the examples, but some of our dependencies (like static_cell) require atomic CAS so this is needed.
 portable-atomic = {version = "1.7.0", features = ["critical-section"]}
 rp2040-boot2 = "0.3.0"

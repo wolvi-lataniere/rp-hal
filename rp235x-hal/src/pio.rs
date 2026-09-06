@@ -3,8 +3,8 @@
 //! See [Chapter 11](https://rptl.io/rp2350-datasheet#section_pio) of the RP2350
 //! datasheet for more details.
 
+use ::pio::{self, Instruction, InstructionOperands, Program, SideSet, Wrap};
 use core::ops::Deref;
-use pio_core::{self as pio, Instruction, InstructionOperands, Program, SideSet, Wrap};
 
 use crate::{
     atomic_register_access::{write_bitmask_clear, write_bitmask_set},
