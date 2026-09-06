@@ -49,7 +49,7 @@
 //! ```
 //!
 //! See [examples/adc.rs](https://github.com/rp-rs/rp-hal/tree/main/rp235x-hal-examples/src/bin/adc.rs) and
-//! [pimoroni_pico_explorer_showcase.rs](https://github.com/rp-rs/rp-hal-boards/tree/main/boards/pimoroni-pico-explorer/examples/pimoroni_pico_explorer_showcase.rs) for more complete examples
+//! [pimoroni_pico_explorer_showcase.rs](https://github.com/rp-rs/rp-hal-boards/tree/main/boards/pimoroni-pico-explorer/examples/pimoroni-pico-explorer-showcase.rs) for more complete examples
 //!
 //! ### Free running mode with FIFO
 //!
@@ -85,7 +85,7 @@
 //!     }
 //! }
 //! ```
-//! See [examples/adc_fifo_poll.rs](https://github.com/rp-rs/rp-hal/tree/main/rp235x-hal-examples/src/bin/adc_fifo_poll.rs) for a more complete example.
+//! See [examples/adc-fifo-poll.rs](https://github.com/rp-rs/rp-hal/tree/main/rp235x-hal-examples/src/bin/adc-fifo-poll.rs) for a more complete example.
 //!
 //! ### Using DMA
 //!
@@ -131,7 +131,7 @@
 //! // do something with `buf` (it now contains 500 samples read from the ADC)
 //! //...
 //! ```
-//! //! See [examples/adc_fifo_dma.rs](https://github.com/rp-rs/rp-hal/tree/main/rp235x-hal-examples/src/bin/adc_fifo_dma.rs) for a more complete example.
+//! //! See [examples/adc-fifo-dma.rs](https://github.com/rp-rs/rp-hal/tree/main/rp235x-hal-examples/src/bin/adc-fifo-dma.rs) for a more complete example.
 //!
 //! ### Free running mode without FIFO
 //!

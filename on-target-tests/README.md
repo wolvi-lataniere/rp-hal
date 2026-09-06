@@ -3,7 +3,7 @@
 This project is for running tests of rp2040-hal against real hardware via knurling-rs tools
 
 Adding a test:  
-- Add a new Rust program to tests (eg tests/my_new_test.rs)
+- Add a new Rust program to tests (eg tests/my-new-test.rs)
 - Add a new [[test]] to the Cargo.toml
 
 Running all tests:  

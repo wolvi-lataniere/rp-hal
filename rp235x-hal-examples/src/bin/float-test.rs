@@ -40,7 +40,7 @@
 //! End  : acc=0.05375396, took 3.4 cycles per op
 //! Rebooting now
 //! PANIC:
-//! PanicInfo { payload: Any { .. }, message: Some(Finished!), location: Location { file: "rp235x-hal/examples/float_test.rs", line: 166, col: 5 }, can_unwind: true, force_no_backtrace: false }
+//! PanicInfo { payload: Any { .. }, message: Some(Finished!), location: Location { file: "rp235x-hal/examples/float-test.rs", line: 166, col: 5 }, can_unwind: true, force_no_backtrace: false }
 //! ```
 //!
 //! Typical output (with no default features):
@@ -73,7 +73,7 @@
 //! End  : acc=0.9049483, took 3.4 cycles per op
 //! Rebooting now
 //! PANIC:
-//! PanicInfo { payload: Any { .. }, message: Some(Finished!), location: Location { file: "rp235x-hal/examples/float_test.rs", line: 166, col: 5 }, can_unwind: true, force_no_backtrace: false }
+//! PanicInfo { payload: Any { .. }, message: Some(Finished!), location: Location { file: "rp235x-hal/examples/float-test.rs", line: 166, col: 5 }, can_unwind: true, force_no_backtrace: false }
 //! ```
 //!
 //! See the `Cargo.toml` file for Copyright and license details.

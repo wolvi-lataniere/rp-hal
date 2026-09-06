@@ -75,10 +75,10 @@ $ cd rp2040-hal-examples
 $ cargo build
    Compiling rp2040-hal-examples v0.1.0 (/home/user/rp-hal/rp2040-hal-examples)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.53s
-$ cargo build --bin dormant_sleep
+$ cargo build --bin dormant-sleep
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
-$ file ./target/thumbv6m-none-eabi/debug/dormant_sleep
-./target/thumbv6m-none-eabi/debug/dormant_sleep: ELF 32-bit LSB executable, ARM, EABI5 version 1 (GNU/Linux), statically linked, with debug_info, not stripped
+$ file ./target/thumbv6m-none-eabi/debug/dormant-sleep
+./target/thumbv6m-none-eabi/debug/dormant-sleep: ELF 32-bit LSB executable, ARM, EABI5 version 1 (GNU/Linux), statically linked, with debug_info, not stripped
 ```
 
 You can also 'run' an example, which will invoke [picotool] to flash the RP2040
@@ -87,11 +87,11 @@ binaries][picotool-releases] are available for Windows, Linux, and macOS.
 
 ```console
 $ cd rp2040-hal-examples
-$ cargo run --bin dormant_sleep
+$ cargo run --bin dormant-sleep
    Compiling rp2040-hal v0.12.0 (/home/user/rp-hal/rp2040-hal)
    Compiling rp2040-hal-examples v0.1.0 (/home/user/rp-hal/rp2040-hal-examples)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.47s
-     Running `picotool load --update --verify --execute -t elf target/thumbv6m-none-eabi/debug/dormant_sleep`
+     Running `picotool load --update --verify --execute -t elf target/thumbv6m-none-eabi/debug/dormant-sleep`
 Loading into Flash:   [==============================]  100%
 Verifying Flash:      [==============================]  100%
   OK
