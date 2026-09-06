@@ -153,11 +153,11 @@ $ cargo build --target thumbv8m.main-none-eabihf
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.08s
 $ find target/thumbv8m.main-none-eabihf/debug/ -maxdepth 1 -type f -executable | sort
 target/thumbv8m.main-none-eabihf/debug/adc
-target/thumbv8m.main-none-eabihf/debug/adc_fifo_dma
+target/thumbv8m.main-none-eabihf/debug/adc-fifo-dma
 ..
 target/thumbv8m.main-none-eabihf/debug/blinky
 ..
-target/thumbv8m.main-none-eabihf/debug/vector_table
+target/thumbv8m.main-none-eabihf/debug/vector-table
 target/thumbv8m.main-none-eabihf/debug/watchdog
 ```
 

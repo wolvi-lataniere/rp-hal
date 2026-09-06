@@ -261,7 +261,7 @@ binary over USB.
 
 ```sh
 cd rp2040-hal-examples  # Or: cd rp235x-hal-examples
-cargo run --release --bin pwm_blink
+cargo run --release --bin pwm-blink
 ```
 
 If you want to create a UF2 file, which is loaded by copying it over to the
@@ -269,14 +269,14 @@ RPI-RP2 mass storage device, use the `picotool uf2 convert` command on your
 compiled program with the `-t elf` argument.
 
 ```sh
-picotool uf2 convert -t elf target/thumbv6m-none-eabi/release/pwm_blink pwm_blink.uf2
+picotool uf2 convert -t elf target/thumbv6m-none-eabi/release/pwm-blink pwm-blink.uf2
 ```
 
 Picotool can also read "Binary Info" from a device with `picotool info`. To
 enable this in your firmware, see the [rp-binary-info] crate and the
 corresponding [binary info example].
 
-[binary info example]: https://github.com/rp-rs/rp-hal/blob/main/rp2040-hal-examples/src/bin/binary_info_demo.rs
+[binary info example]: https://github.com/rp-rs/rp-hal/blob/main/rp2040-hal-examples/src/bin/binary-info-demo.rs
 
 ### Loading with probe-rs
 
@@ -317,7 +317,7 @@ connected to the RP2040.
 
 ```sh
 cd rp2040-hal-examples  # Or: cd rp235x-hal-examples
-cargo run --release --bin pwm_blink
+cargo run --release --bin pwm-blink
 ```
 [RP2040 Project Template]: https://github.com/rp-rs/rp2040-project-template
 [RP235x Project Template]: https://github.com/rp-rs/rp235x-project-template

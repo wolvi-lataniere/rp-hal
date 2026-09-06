@@ -3,7 +3,6 @@ name = "rp-binary-info"
 version = "0.1.2"
 edition = "2021"
 authors = ["The rp-rs Developers"]
-homepage = "https://github.com/rp-rs/rp-hal"
 description = "Code and types for creating Picotool compatible Binary Info metadata"
 license = "MIT OR Apache-2.0"
 rust-version = "1.82"

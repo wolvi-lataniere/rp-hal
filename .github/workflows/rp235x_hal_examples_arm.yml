@@ -20,7 +20,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y picotool
       - name: Test picotool
-        run: picotool info ${PACKAGE}/target/${TARGET}/debug/binary_info_demo -t elf -a | tee /dev/stderr | grep -q RP2350
+        run: picotool info ${PACKAGE}/target/${TARGET}/debug/binary-info-demo -t elf -a | tee /dev/stderr | grep -q RP2350
   udeps:
     runs-on: ubuntu-24.04
     steps:

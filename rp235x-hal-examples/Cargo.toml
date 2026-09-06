@@ -3,7 +3,6 @@ authors = ["The rp-rs Developers"]
 categories = ["embedded", "hardware-support", "no-std", "no-std::no-alloc"]
 description = "Examples for the rp235x-hal crate"
 edition = "2021"
-homepage = "https://github.com/rp-rs/rp-hal"
 keywords = ["embedded", "hal", "raspberry-pi", "rp235x", "rp2350", "embedded-hal"]
 license = "MIT OR Apache-2.0"
 name = "rp235x-hal-examples"
