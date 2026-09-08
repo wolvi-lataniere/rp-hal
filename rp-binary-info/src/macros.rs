@@ -55,46 +55,97 @@ macro_rules! pointer {
     }};
 }
 
-/// Concatenate strings a list of names to get
-/// names for each pins
+/// Concatenate a list of names for the `PinsWithName` structure, returning a &CStr
+///
+/// This macro adds a '|' character between each string and converts the result to &CStr.
+///
+/// This macro is used by [`pins_with_names!`](super::pins_with_names) for the names management.
+/// # Example
+/// ```
+/// # use rp_binary_info::*;
+/// # use core::ffi::CStr;
+/// let concatenated: &CStr = pins_names_concat!("A", "B", "C");
+/// assert_eq!(c"A|B|C", concatenated);
+/// ```
 #[macro_export]
 macro_rules! pins_names_concat {
+    // For a list of names in &[], just send them flat to the macro
     (&[$($names: expr),+]) => {
         pins_names_concat!($($names),+)
     };
 
+    // For a single string, convert the result to &CStr
     ($names:expr) => {
-        if let Ok(x) = core::ffi::c_str::CStr::from_bytes_until_nul(
-            (concat!($names, "\0")).as_bytes()
-        ) {
-        x
+        if let Ok(x) = core::ffi::CStr::from_bytes_until_nul(
+            (concat!($names, "\0")).as_bytes())
+        {
+            x
         } else {
-        panic!("Failed to convert &str to &Cstr");
+            panic!("Failed to convert &str to &Cstr");
         }
     };
 
+    // For two strings, concatenate them to a single string and return its conversion
     ($names:expr, $name:expr) => {
         pins_names_concat!(concat!($names,"|",$name))
     };
 
+    // For multiple strings, recursively concatenate them
     ($names:expr, $second:expr, $($more:expr),+) => {
         pins_names_concat!(concat!($names,"|",$second), $($more),+)
     };
 }
 
-/// Generate a static item containing a Pin description with its name
+/// Generate a static item containing a bi_pin_with_names description and returns its
 /// [`EntryAddr`](super::EntryAddr).
+///
+/// Usage: `pins_with_names!(pins: &[u32], names)`
+///
+/// * `pins` is the list of pins to be assigned, pins numbers should be scrictly ascending,
+/// * `names` is the name(s) for the pins with eigher:
+///     - a single `&str` to name all the pins with the same label,
+///     - a list of `&str` to individually name the pins (either flat or in a `&[&str]`).
+///
+/// # Example
+/// ```
+/// # use rp_binary_info::*;
+/// let pin_with_one_name : EntryAddr =  pins_with_names!([0,1].as_slice(), "UART");
+/// let pin_with_two_names : EntryAddr =  pins_with_names!([0,1].as_slice(), &["RX","TX"]);
+/// let pin_with_two_names_without_array : EntryAddr =  pins_with_names!([0,1].as_slice(), "RX","TX");
+/// ```
+///
+/// ```
+/// use rp_binary_info;
+/// let pin_with_one_name : rp_binary_info::EntryAddr = rp_binary_info::pins_with_names!([0,1].as_slice(), &["UART"]);
+/// ```
 #[macro_export]
 macro_rules! pins_with_names {
-    ($pins:expr, &[$($names: expr),+]) => {{
+    ($pins:expr, &[$($names: literal),+]) => {
+        $crate::pins_with_names!($pins, $($names),+)
+    };
+
+    ($pins:expr, $($names:literal),+) => {{
         static ENTRY: $crate::PinsWithName =
             $crate::PinsWithName::new($pins, ($crate::pins_names_concat!($($names),+)));
         ENTRY.addr()
     }};
 }
 
-/// Generate a static item containing the Pins with function desciptor
-/// [`EntryAddr`](super::EntryAddr)
+/// Generate a static item containing the bi_pins_with_func descriptor for individual pins and returns its
+/// [`EntryAddr`](super::EntryAddr).
+///
+/// Usage: `pins_with_func!(pins: &[u32], func: PinFunction)`
+/// * `pins` is the list of pins to label,
+/// * `func` is the [`PinFunction`](super::PinFunction) to label the pins with.
+///
+/// **NOTE** Using this method, you can only assign up to 5 pins, for more pinsm see
+/// [`pins_range_with_func`](pins_range_with_func)
+///
+/// # Example
+/// ```
+/// # use rp_binary_info::*;
+/// let pins_functions: EntryAddr = pins_with_func!(&[0,1], PinFunction::Uart);
+/// ```
 #[macro_export]
 macro_rules! pins_with_func {
     ($pins:expr, $func: expr) => {{
@@ -103,8 +154,18 @@ macro_rules! pins_with_func {
     }};
 }
 
-/// Generate a static item containing the Pins range with function descriptor
-/// [`EntryAddr`](super::EntryAddr)
+/// Generate a static item containing the bi_pins_with_func descriptor for a range of pins and
+/// returns its [`EntryAddr`](super::EntryAddr).
+///
+/// Usage: `pins_range_with_func!(low: u32, high: u32, func: PinFunction)`
+/// * `low` and `high` are the boundaries of the pins range `[low;high]`,
+/// * `func` is the function to assign to there pins.
+///
+/// # Example
+/// ```
+/// # use rp_binary_info::*;
+/// let pins_functions: EntryAddr = pins_range_with_func!(2,5, PinFunction::Spi);
+/// ```
 #[macro_export]
 macro_rules! pins_range_with_func {
     ($low:expr, $high:expr, $func:expr) => {{
@@ -277,26 +338,6 @@ mod test {
     #[test]
     fn names_concatenation_returns_pipe_separated_list_of_names() {
         assert_eq!(c"a|b|c", pins_names_concat!(&["a", "b", "c"]));
-    }
-
-    #[test]
-    fn pins_with_names_can_be_created_from_strings() {
-        crate::PinsWithName::new([1, 2, 3].as_slice(), pins_names_concat!(&["a", "b", "c"]));
-    }
-
-    #[test]
-    fn pins_name_macro() {
-        pins_with_names!([1, 2, 3].as_slice(), &["A", "B", "C"]);
-    }
-
-    #[test]
-    fn pins_with_func_macro() {
-        pins_with_func!([1, 2].as_slice(), crate::consts::GpioFunction::Uart);
-    }
-
-    #[test]
-    fn pins_range_with_func_macro() {
-        pins_range_with_func!(0, 5, crate::consts::GpioFunction::Spi);
     }
 }
 
