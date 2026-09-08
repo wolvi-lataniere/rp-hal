@@ -103,9 +103,9 @@ pub static PICOTOOL_ENTRIES: [binary_info::EntryAddr; 11] = [
     binary_info::rp_program_build_attribute!(),
     binary_info::rp_pico_board!(c"pico"),
     binary_info::rp_binary_end!(__flash_binary_end),
-    binary_info::pins_with_names!(&[25], &["LED"]),
-    hal::binary_info::pins_with_func!(&[0, 1], hal::binary_info::consts::GpioFunction::Uart),
-    hal::binary_info::pins_range_with_func!(2, 5, hal::binary_info::consts::GpioFunction::Spi),
+    binary_info::pins_with_names!([25].as_slice(), "LED"),
+    binary_info::pins_with_func!([0, 1].as_slice(), hal::binary_info::PinFunction::Uart),
+    binary_info::pins_range_with_func!(2, 5, hal::binary_info::PinFunction::Spi),
     // An example with a non-Raspberry-Pi tag
     binary_info::int!(binary_info::make_tag(b"JP"), 0x0000_0001, 0x12345678),
 ];
