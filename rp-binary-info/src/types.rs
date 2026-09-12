@@ -76,7 +76,7 @@ pub struct MappingTableEntry {
     /// The start address in RAM (or wherever the address picotool finds will
     /// point)
     pub source_addr_start: *const u32,
-    /// The start address in flash (or whever the data actually lives in the
+    /// The start address in flash (or wherever the data actually lives in the
     /// ELF)
     pub dest_addr_start: *const u32,
     /// The end address in flash
@@ -141,7 +141,7 @@ pub struct StringEntry {
 }
 
 impl StringEntry {
-    /// Create a new `StringEntry`
+    /// Create a new [`StringEntry`]
     pub const fn new(tag: u16, id: u32, value: &'static core::ffi::CStr) -> StringEntry {
         StringEntry {
             header: EntryCommon {
@@ -173,7 +173,7 @@ pub struct IntegerEntry {
 }
 
 impl IntegerEntry {
-    /// Create a new `IntegerEntry`
+    /// Create a new [`IntegerEntry`]
     pub const fn new(tag: u16, id: u32, value: u32) -> IntegerEntry {
         IntegerEntry {
             header: EntryCommon {
@@ -200,7 +200,7 @@ pub struct PointerEntry {
 }
 
 impl PointerEntry {
-    /// Create a new `PointerEntry`
+    /// Create a new [`PointerEntry`]
     ///
     /// Pointers will be marked as 32-bit integers in the binary information
     /// structure, as there is no separate data type tag for pointers. This
@@ -238,13 +238,14 @@ pub struct PinsWithName {
 }
 
 impl PinsWithName {
-    /// Create a new `PinWithName` from a list of pins and labels
+    /// Create a new [`PinsWithName`] from a list of pins and labels
     ///
-    /// * `pins` ordered list of pins
-    /// * `labels` a &CStr to label the pins
+    /// * `pins` - an ordered list of pins (low to high)
+    /// * `labels` - a [`&CStr`](core::ffi::CStr) to label those pins with,
+    ///   either as `"LABEL"` or `"LABEL_A|LABEL_B|..."`
     ///
-    /// As the pins are converted into a mask, pins have to be strictly sorted for
-    /// the pins list to match the labels (if multiple labels used with
+    /// As the pins are converted into a mask, pins have to be strictly sorted
+    /// for the pins list to match the labels (if multiple labels used with
     /// [`pins_names_concat!()`](super::pins_names_concat))
     pub const fn new(pins: &[u32], labels: &'static core::ffi::CStr) -> Self {
         Self {
@@ -296,7 +297,7 @@ const BI_PINS_ENCODING_MULTI: u32 = 2;
 const BI_PINS_ENCODING_RANGE: u32 = 1;
 
 impl PinsWithFunction {
-    /// Create a new `PinWithFunction` for multiple pins
+    /// Create a new [`PinsWithFunction`] for multiple pins
     ///
     /// * `pins` The list of pins to implement this function (maximum 5)
     /// * `func` The [`PinFunction`](super::PinFunction) to assign to these pins
@@ -321,11 +322,11 @@ impl PinsWithFunction {
         }
     }
 
-    /// Create a new `PinsWithFunction` from a pins range
+    /// Create a new [`PinsWithFunction`] from a pins range
     ///
     /// Apply function `func` to pins range going from `pin_low` to `pin_high`
     ///
-    /// * `pin_low`, `pin_high` boudaries of the pins range [pin_low;pin_high],
+    /// * `pin_low` and `pin_low` are the boundaries of the pin number range `pin_low..=pin_high`,
     /// * `func` [`PinFunction`](super::PinFunction) to label the pins with.
     pub const fn new_range(pin_low: u32, pin_high: u32, func: crate::PinFunction) -> Self {
         let func = shl_or_panic(func as u32, 3, "Failed to shift GpioFunction");
@@ -348,16 +349,17 @@ impl PinsWithFunction {
         EntryAddr(self as *const Self as *const u32)
     }
 
-    /// Use recursion to iterate through the list of values and fold them to a single u32 value.
+    /// Use recursion to iterate through the list of values and fold them to a single `u32` value.
     ///
-    /// According to pico_sdk, the `encoding` value should look like this:
-    /// - bits[2..0] : Encoding format (BI_PINS_ENCODING_RANGE or BI_PINS_ENCODING_MULTI),
-    /// - bits[6..3] : pin function `PinFunction` value,
-    /// - bits[11..7] : first pin number,
-    /// - bits[16..12] : second pin number (or first pin number duplicated if only one pin),
-    /// - bits[21..17] : third pin number (or second pin number duplicated if only two pins),
-    /// - bits[26..22] : fourth pin number (or third pin number duplicated if only three pins),
-    /// - bits[31..27] : fifth pin number (or fourth pin number duplicated if only four pins).
+    /// According to pico-sdk, the `encoding` value should look like this:
+    ///
+    /// - `bits[0..=2]`: Encoding format (`BI_PINS_ENCODING_RANGE` or `BI_PINS_ENCODING_MULTI`),
+    /// - `bits[3..=6]`: a `PinFunction` value,
+    /// - `bits[7..=11]`: first pin number,
+    /// - `bits[12..=16]`: second pin number (or first pin number duplicated if only one pin),
+    /// - `bits[17..=21]`: third pin number (or second pin number duplicated if only two pins),
+    /// - `bits[22..=26]`: fourth pin number (or third pin number duplicated if only three pins),
+    /// - `bits[27..=31]`: fifth pin number (or fourth pin number duplicated if only four pins).
     ///
     /// Note if not all pins are used, subsequent pins after the duplicated one are "unused"
     const fn encode_pins(
@@ -378,9 +380,9 @@ impl PinsWithFunction {
                 }
             }
             [first, rest @ ..] => {
-                // For more than one value, recusively calls itself.
+                // For more than one value, recursively calls itself.
                 // We have to recurse here because in const rust `iter` is unstable.
-                if let Some(value) = first.checked_shl(7 + 5 * position) {
+                if let Some(value) = first.checked_shl(7 + (5 * position)) {
                     Self::encode_pins(initial_value | value, rest, position + 1, value)
                 } else {
                     None

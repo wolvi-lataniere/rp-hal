@@ -1,7 +1,7 @@
 //! Handy macros for making Binary Info entries
 
-/// Generate a static item containing the given environment variable,
-/// and return its [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the given
+/// environment variable, and return its [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! env {
     ($tag:expr, $id:expr, $env_var_name:expr) => {
@@ -17,8 +17,8 @@ macro_rules! env {
     };
 }
 
-/// Generate a static item containing the given string, and return its
-/// [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the given
+/// string, and return its [`EntryAddr`](super::EntryAddr).
 ///
 /// You must pass a numeric tag, a numeric ID, and `&CStr` (which is always
 /// null-terminated).
@@ -30,11 +30,11 @@ macro_rules! str {
     }};
 }
 
-/// Generate a static item containing the given integer, and return its
-/// [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`IntegerEntry`](crate::IntegerEntry) containing the given
+/// integer, and return its [`EntryAddr`](super::EntryAddr).
 ///
-/// You must pass a numeric tag, a numeric ID, and `&CStr` (which is always
-/// null-terminated).
+/// You must pass a numeric tag, a numeric ID, and a `u32`.
+///
 #[macro_export]
 macro_rules! int {
     ($tag:expr, $id:expr, $int:expr) => {{
@@ -43,10 +43,11 @@ macro_rules! int {
     }};
 }
 
-/// Generate a static item containing the given pointer, and return its
-/// [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`PointerEntry`](crate::PointerEntry) containing the given
+/// pointer, and return its [`EntryAddr`](super::EntryAddr).
 ///
-/// You must pass a numeric tag, a numeric ID, and a pointer
+/// You must pass a numeric tag, a numeric ID, and a pointer.
+///
 #[macro_export]
 macro_rules! pointer {
     ($tag:expr, $id:expr, $ptr:expr) => {{
@@ -55,12 +56,17 @@ macro_rules! pointer {
     }};
 }
 
-/// Concatenate a list of names for the `PinsWithName` structure, returning a &CStr
+/// Concatenate a list of names for the [`PinsWithName`](crate::PinsWithName)
+/// structure, returning a `&CStr`.
 ///
-/// This macro adds a '|' character between each string and converts the result to &CStr.
+/// This macro adds a '|' character between each string and converts the result
+/// to `&CStr`.
 ///
-/// This macro is used by [`pins_with_names!`](super::pins_with_names) for the names management.
+/// This macro is used by [`pins_with_names!`](super::pins_with_names) for the
+/// names management.
+///
 /// # Example
+///
 /// ```
 /// # use rp_binary_info::*;
 /// # use core::ffi::CStr;
@@ -76,9 +82,7 @@ macro_rules! pins_names_concat {
 
     // For a single string, convert the result to &CStr
     ($names:expr) => {
-        if let Ok(x) = core::ffi::CStr::from_bytes_until_nul(
-            (concat!($names, "\0")).as_bytes())
-        {
+        if let Ok(x) = core::ffi::CStr::from_bytes_until_nul((concat!($names, "\0")).as_bytes()) {
             x
         } else {
             panic!("Failed to convert &str to &Cstr");
@@ -87,36 +91,36 @@ macro_rules! pins_names_concat {
 
     // For two strings, concatenate them to a single string and return its conversion
     ($names:expr, $name:expr) => {
-        pins_names_concat!(concat!($names,"|",$name))
+        pins_names_concat!(concat!($names, "|" ,$name))
     };
 
     // For multiple strings, recursively concatenate them
     ($names:expr, $second:expr, $($more:expr),+) => {
-        pins_names_concat!(concat!($names,"|",$second), $($more),+)
+        pins_names_concat!(concat!($names, "|", $second), $($more),+)
     };
 }
 
-/// Generate a static item containing a bi_pin_with_names description and returns its
+/// Generate a static [`PinsWithName`](crate::PinsWithName) and return its
 /// [`EntryAddr`](super::EntryAddr).
 ///
-/// Usage: `pins_with_names!(pins: &[u32], names)`
+/// Usage: `pins_with_names!(pins: &[u32], names...)`
 ///
-/// * `pins` is the list of pins to be assigned, pins numbers should be scrictly ascending,
-/// * `names` is the name(s) for the pins with eigher:
-///     - a single `&str` to name all the pins with the same label,
-///     - a list of `&str` to individually name the pins (either flat or in a `&[&str]`).
+/// * `pins` is the list of pin numbers being named
+///     - pin numbers must be in strictly ascending order
+/// * `names` is the name(s) for the pins with either:
+///     - a single `&str` to name all the pins with the same label, or
+///     - a list of `&str` to individually name the pins (either as separate
+///       arguments, or in a `&[&str]`).
 ///
 /// # Example
-/// ```
-/// # use rp_binary_info::*;
-/// let pin_with_one_name : EntryAddr =  pins_with_names!([0,1].as_slice(), "UART");
-/// let pin_with_two_names : EntryAddr =  pins_with_names!([0,1].as_slice(), &["RX","TX"]);
-/// let pin_with_two_names_without_array : EntryAddr =  pins_with_names!([0,1].as_slice(), "RX","TX");
-/// ```
 ///
 /// ```
-/// use rp_binary_info;
-/// let pin_with_one_name : rp_binary_info::EntryAddr = rp_binary_info::pins_with_names!([0,1].as_slice(), &["UART"]);
+/// # use rp_binary_info::*;
+/// // Pins 0 and 1 are named "UART"
+/// let entry: EntryAddr = pins_with_names!(&[0, 1], "UART");
+/// // Pin 0 is "RX", Pin 1 is "TX"
+/// let entry: EntryAddr = pins_with_names!(&[0, 1], "RX", "TX");
+/// let entry: EntryAddr = pins_with_names!(&[0, 1], &["RX", "TX"]);
 /// ```
 #[macro_export]
 macro_rules! pins_with_names {
@@ -131,20 +135,23 @@ macro_rules! pins_with_names {
     }};
 }
 
-/// Generate a static item containing the bi_pins_with_func descriptor for individual pins and returns its
-/// [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`PinsWithFunction`](crate::PinsWithFunction) and return
+/// its [`EntryAddr`](super::EntryAddr).
 ///
 /// Usage: `pins_with_func!(pins: &[u32], func: PinFunction)`
+///
 /// * `pins` is the list of pins to label,
 /// * `func` is the [`PinFunction`](super::PinFunction) to label the pins with.
 ///
-/// **NOTE** Using this method, you can only assign up to 5 pins, for more pinsm see
-/// [`pins_range_with_func`](pins_range_with_func)
+/// **NOTE** Using this method, you can only assign up to 5 pins - for more pins
+/// see [`pins_range_with_func!`](crate::pins_range_with_func!).
 ///
 /// # Example
+///
 /// ```
 /// # use rp_binary_info::*;
-/// let pins_functions: EntryAddr = pins_with_func!(&[0,1], PinFunction::Uart);
+/// // Pins 0 and 1 are used for the UART
+/// let entry: EntryAddr = pins_with_func!(&[0, 1], PinFunction::Uart);
 /// ```
 #[macro_export]
 macro_rules! pins_with_func {
@@ -154,17 +161,20 @@ macro_rules! pins_with_func {
     }};
 }
 
-/// Generate a static item containing the bi_pins_with_func descriptor for a range of pins and
-/// returns its [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`PinsWithFunction`](crate::PinsWithFunction) and return
+/// its [`EntryAddr`](super::EntryAddr).
 ///
 /// Usage: `pins_range_with_func!(low: u32, high: u32, func: PinFunction)`
-/// * `low` and `high` are the boundaries of the pins range `[low;high]`,
-/// * `func` is the function to assign to there pins.
+///
+/// * `low` and `high` are the boundaries of the pin number range `low..=high`,
+/// * `func` is the function to assign to those pins.
 ///
 /// # Example
+///
 /// ```
 /// # use rp_binary_info::*;
-/// let pins_functions: EntryAddr = pins_range_with_func!(2,5, PinFunction::Spi);
+/// // Pins 2, 3, 4 and 5 are used for SPI
+/// let entry: EntryAddr = pins_range_with_func!(2, 5, PinFunction::Spi);
 /// ```
 #[macro_export]
 macro_rules! pins_range_with_func {
@@ -175,8 +185,8 @@ macro_rules! pins_range_with_func {
     }};
 }
 
-/// Generate a static item containing the program name, and return its
-/// [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the program
+/// name, and return its [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_program_name {
     ($name:expr) => {
@@ -188,8 +198,9 @@ macro_rules! rp_program_name {
     };
 }
 
-/// Generate a static item containing the `CARGO_BIN_NAME` as the program name,
-/// and return its [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the
+/// `CARGO_BIN_NAME` as the program name, and return its
+/// [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_cargo_bin_name {
     () => {
@@ -201,8 +212,8 @@ macro_rules! rp_cargo_bin_name {
     };
 }
 
-/// Generate a static item containing the program version, and return its
-/// [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the program
+/// version, and return its [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_program_version {
     ($version:expr) => {{
@@ -214,8 +225,9 @@ macro_rules! rp_program_version {
     }};
 }
 
-/// Generate a static item containing the `CARGO_PKG_VERSION` as the program
-/// version, and return its [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the
+/// `CARGO_PKG_VERSION` as the program version, and return its
+/// [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_cargo_version {
     () => {
@@ -227,8 +239,8 @@ macro_rules! rp_cargo_version {
     };
 }
 
-/// Generate a static item containing the program URL, and return its
-/// [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the program
+/// URL, and return its [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_program_url {
     ($url:expr) => {
@@ -240,8 +252,9 @@ macro_rules! rp_program_url {
     };
 }
 
-/// Generate a static item containing the `CARGO_PKG_HOMEPAGE` as the program URL,
-/// and return its [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the
+/// `CARGO_PKG_HOMEPAGE` as the program URL, and return its
+/// [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_cargo_homepage_url {
     () => {
@@ -253,8 +266,8 @@ macro_rules! rp_cargo_homepage_url {
     };
 }
 
-/// Generate a static item containing the program description, and return its
-/// [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the program
+/// description, and return its [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_program_description {
     ($description:expr) => {
@@ -266,8 +279,9 @@ macro_rules! rp_program_description {
     };
 }
 
-/// Generate a static item containing the `CARGO_PKG_DESCRIPTION` as the program description,
-/// and return its [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the
+/// `CARGO_PKG_DESCRIPTION` as the program description, and return its
+/// [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_cargo_description {
     () => {
@@ -279,8 +293,9 @@ macro_rules! rp_cargo_description {
     };
 }
 
-/// Generate a static item containing whether this is a debug or a release
-/// build, and return its [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing whether
+/// this is a debug or a release build, and return its
+/// [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_program_build_attribute {
     () => {
@@ -298,8 +313,9 @@ macro_rules! rp_program_build_attribute {
     };
 }
 
-/// Generate a static item containing the specific board this program runs on,
-/// and return its [`EntryAddr`](super::EntryAddr).
+/// Generate a static [`StringEntry`](crate::StringEntry) containing the
+/// specific board this program runs on, and return its
+/// [`EntryAddr`](super::EntryAddr).
 #[macro_export]
 macro_rules! rp_pico_board {
     ($board:expr) => {
@@ -311,18 +327,16 @@ macro_rules! rp_pico_board {
     };
 }
 
-/// Generate a static item containing the binary end address, and return its
-/// [`EntryAddr`](super::EntryAddr). The argument should be a symbol provided
-/// by the linker script that is located at the end of the binary.
+/// Generate a static [`PointerEntry`](crate::PointerEntry) containing the
+/// binary end address, and return its [`EntryAddr`](super::EntryAddr).
+///
 #[macro_export]
 macro_rules! rp_binary_end {
     ($ptr:ident) => {{
         $crate::pointer!(
             $crate::consts::TAG_RASPBERRY_PI,
             $crate::consts::ID_RP_BINARY_END,
-            // `unsafe` only needed because MSRV does not yet
-            // contain https://github.com/rust-lang/rust/pull/125834
-            unsafe { core::ptr::addr_of!($ptr).cast() }
+            core::ptr::addr_of!($ptr).cast()
         )
     }};
 }
