@@ -22,6 +22,17 @@ macro_rules! env {
 ///
 /// You must pass a numeric tag, a numeric ID, and `&CStr` (which is always
 /// null-terminated).
+///
+/// # Example
+///
+/// ```
+/// # use rp_binary_info::{EntryAddr, consts, str};
+/// let entry: EntryAddr = str!(
+///     consts::TAG_RASPBERRY_PI,
+///     consts::ID_RP_PROGRAM_DESCRIPTION,
+///     c"Your program description goes here"
+/// );
+/// ```
 #[macro_export]
 macro_rules! str {
     ($tag:expr, $id:expr, $str:expr) => {{
@@ -35,6 +46,17 @@ macro_rules! str {
 ///
 /// You must pass a numeric tag, a numeric ID, and a `u32`.
 ///
+/// # Example
+///
+/// ```
+/// # use rp_binary_info::{EntryAddr, make_tag, int};
+/// const EXAMPLE_ID: u32 = 0x12345678;
+/// let entry: EntryAddr = int!(
+///     make_tag(b"EX"),
+///     EXAMPLE_ID,
+///     1234
+/// );
+/// ```
 #[macro_export]
 macro_rules! int {
     ($tag:expr, $id:expr, $int:expr) => {{
@@ -48,6 +70,18 @@ macro_rules! int {
 ///
 /// You must pass a numeric tag, a numeric ID, and a pointer.
 ///
+/// # Example
+///
+/// ```
+/// # use rp_binary_info::{EntryAddr, make_tag, pointer};
+/// static ITEM: u32 = 123;
+/// const EXAMPLE_ID: u32 = 0x12345678;
+/// let entry: EntryAddr = pointer!(
+///     make_tag(b"EX"),
+///     EXAMPLE_ID,
+///     (&raw const ITEM) as *const ()
+/// );
+/// ```
 #[macro_export]
 macro_rules! pointer {
     ($tag:expr, $id:expr, $ptr:expr) => {{
@@ -187,6 +221,12 @@ macro_rules! pins_range_with_func {
 
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the program
 /// name, and return its [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_program_name!();
+/// ```
 #[macro_export]
 macro_rules! rp_program_name {
     ($name:expr) => {
@@ -201,6 +241,12 @@ macro_rules! rp_program_name {
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the
 /// `CARGO_BIN_NAME` as the program name, and return its
 /// [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_cargo_bin_name!();
+/// ```
 #[macro_export]
 macro_rules! rp_cargo_bin_name {
     () => {
@@ -214,6 +260,12 @@ macro_rules! rp_cargo_bin_name {
 
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the program
 /// version, and return its [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_program_version!();
+/// ```
 #[macro_export]
 macro_rules! rp_program_version {
     ($version:expr) => {{
@@ -228,6 +280,12 @@ macro_rules! rp_program_version {
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the
 /// `CARGO_PKG_VERSION` as the program version, and return its
 /// [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_cargo_version!();
+/// ```
 #[macro_export]
 macro_rules! rp_cargo_version {
     () => {
@@ -241,6 +299,12 @@ macro_rules! rp_cargo_version {
 
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the program
 /// URL, and return its [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_program_url!();
+/// ```
 #[macro_export]
 macro_rules! rp_program_url {
     ($url:expr) => {
@@ -255,6 +319,12 @@ macro_rules! rp_program_url {
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the
 /// `CARGO_PKG_HOMEPAGE` as the program URL, and return its
 /// [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_cargo_homepage_url!();
+/// ```
 #[macro_export]
 macro_rules! rp_cargo_homepage_url {
     () => {
@@ -268,6 +338,12 @@ macro_rules! rp_cargo_homepage_url {
 
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the program
 /// description, and return its [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_program_description!();
+/// ```
 #[macro_export]
 macro_rules! rp_program_description {
     ($description:expr) => {
@@ -282,6 +358,12 @@ macro_rules! rp_program_description {
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the
 /// `CARGO_PKG_DESCRIPTION` as the program description, and return its
 /// [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_cargo_description!();
+/// ```
 #[macro_export]
 macro_rules! rp_cargo_description {
     () => {
@@ -296,6 +378,12 @@ macro_rules! rp_cargo_description {
 /// Generate a static [`StringEntry`](crate::StringEntry) containing whether
 /// this is a debug or a release build, and return its
 /// [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_program_build_attribute!();
+/// ```
 #[macro_export]
 macro_rules! rp_program_build_attribute {
     () => {
@@ -316,6 +404,12 @@ macro_rules! rp_program_build_attribute {
 /// Generate a static [`StringEntry`](crate::StringEntry) containing the
 /// specific board this program runs on, and return its
 /// [`EntryAddr`](super::EntryAddr).
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_pico_board!("pico2");
+/// ```
 #[macro_export]
 macro_rules! rp_pico_board {
     ($board:expr) => {
@@ -330,6 +424,24 @@ macro_rules! rp_pico_board {
 /// Generate a static [`PointerEntry`](crate::PointerEntry) containing the
 /// binary end address, and return its [`EntryAddr`](super::EntryAddr).
 ///
+/// The argument should be a symbol provided by the linker script that is
+/// located at the end of the binary. For example, you could place this in your
+/// linker script:
+///
+/// ```text
+/// SECTIONS {
+///     .end_block : ALIGN(4)
+///     {
+///         __flash_binary_end = .;
+///     } > FLASH
+/// } INSERT AFTER .uninit;
+/// ```
+///
+/// # Example
+///
+/// ```ignore
+/// let entry: EntryAddr = rp_binary_end!(__flash_binary_end);
+/// ```
 #[macro_export]
 macro_rules! rp_binary_end {
     ($ptr:ident) => {{
